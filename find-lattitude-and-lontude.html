@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map</title>
+</head>
+<body>
+   <div id="map"></div>
+
+
+     <div class="place-item">
+                <label><input type="radio" name="place" id="" class="myplace">Brunton Boatyard
+                    Fort Kochi, Kerala</label>
+                <label><input type="radio" name="place" id="" class="myplace">Coconut Lagoon
+                    Kumarakom, Kerala</label>
+                <label><input type="radio" name="place" id="" class="myplace">Spice Village
+Thekkady, Kerala</label>
+                <label><input type="radio" name="place" id="" class="myplace">Spice Coast Cruises
+Vembanad, Kerala</label>
+                <label><input type="radio" name="place" id="" class="myplace">Marari Beach
+Mararikulam, Kerala</label>
+                <label><input type="radio" name="place" id="" class="myplace">Eighth Bastion
+Fort Kochi, Kerala</label>
+                <label><input type="radio" name="place" id="" class="myplace">Visalam
+Chettinad, Tamil Nadu</label>
+                <label><input type="radio" name="place" id="" class="myplace">Mantra Koodam
+Kumbakonam, Tamil Nadu</label>
+                <label><input type="radio" name="place" id="" class="myplace">Maison Perumal
+Pondicherry</label>
+                <label><input type="radio" name="place" id="" class="myplace">Palais De Mahe
+Pondicherry</label>
+                <label><input type="radio" name="place" id="" class="myplace">Wayanad Wild
+Wayanad, Kerala</label>
+                <label><input type="radio" name="place" id="" class="myplace">Tilar Siro Andamans
+Havelock Island, Andaman & Nicobar Islands</label>
+                <label><input type="radio" name="place" id="" class="myplace">Sanctuary Amaidiyana
+Near Auroville, Tamil Nadu</label>
+                <label><input type="radio" name="place" id="" class="myplace">Casino Hotel
+Kochi, Kerala</label>
+            </div>
+    
+
+   <script>
+
+const myValues = [];
+
+
+let labels = document.querySelectorAll('label');
+
+labels.forEach(label => adddata(label.innerText));
+
+function adddata(address){
+
+const url = `https://api.olamaps.io/places/v1/geocode?address=${encodeURIComponent(address)}&language=hi&api_key=${apiKey}`;
+
+    fetch(url, {
+    method: "GET",
+    headers: {
+        "X-Request-Id": "b5d280f6-41c8-4f1f-8d93-8ad67435c36f"
+    }
+})
+.then(res => {
+    if (!res.ok) {
+        throw new Error("API Error: " + res.status);
+    }
+    return res.json();
+})
+.then(data => {
+    console.log("Geocode Response:", data);
+
+    // Example: extract lat/lng
+    const location = data?.geocodingResults?.[0]?.geometry?.location;
+    myValues.push({name: address, poiter: [location?.lng,location?.lat] });
+})
+.catch(err => {
+    console.error("Geocoding failed:", err);
+});
+}
+
+document.addEventListener('click',()=> {
+   const json = JSON.stringify(myValues, null, 2);
+console.log(json);
+})
+
+</script>
+
+
+</body>
+</html>
