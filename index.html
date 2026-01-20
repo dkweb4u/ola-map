@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Map</title>
+    <script src="https://www.unpkg.com/olamaps-web-sdk@latest/dist/olamaps-web-sdk.umd.js"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        main {
+            position: relative;
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .form {
+            padding: 10px;
+            height: 100vh;
+            overflow: auto;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        .input {
+            padding: 8px 15px;
+            cursor: pointer;
+
+        }
+
+        select.input {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            z-index: 999;
+        }
+
+        .place-item {
+            display: flex;
+            flex-flow: column;
+        }
+
+        .place-item label {
+            display: block;
+            border: 1px solid #000;
+            padding: 8px 10px;
+            margin: 5px auto;
+            width: 100%;
+            transition: all 0.5s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .place-item label:has(input:checked) {
+            background-color: green;
+            color: #fff;
+            border-color: green;
+        }
+
+        .place-item label input {
+            appearance: none;
+            position: absolute;
+            height: 100%;
+            width: 100%;
+        }
+
+        .customMarkerClass {
+            height: 40px;
+            width: 40px;
+         background-image: url('https://www.cghearth.com/favicon/favicon-16x16.png');
+         background-size: contain;
+         background-repeat: no-repeat;
+         background-position: center;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <select name="mapstyle" id="mapstyle" class="input"></select>
+
+        <div class="form">
+
+            <div class="place-item">
+
+            </div>
+
+
+        </div>
+
+        <div id="map"></div>
+    </main>
+
+
+    <script>
+
+        let mydata = '';
+
+        // map style
+        const styleurl = `https://api.olamaps.io/tiles/vector/v1/styles.json?api_key=${apiKey}`;
+
+        const defaultMap = 'https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?key=0.4.0';
+
+        fetch(styleurl, {
+            method: "GET",
+            headers: {
+                "X-Request-Id": "b5d280f6-41c8-4f1f-8d93-8ad67435c36f"
+            }
+        }).then(res => {
+            if (!res.ok) {
+                throw new Error("API Error: " + res.status);
+            }
+            return res.json();
+        }).then(data => { data.forEach((value, i) => { document.querySelector('#mapstyle').innerHTML += `<option value="${value.url}">${i + 1} ${value.name}</option>` }) });
+    </script>
+
+    <!-- map load -->
+    <script>
+        function mapload(mapstyle = defaultMap, pointer = [{ name: "hello", pointer: [77.61261, 12.994826] }]) {
+            (async () => {
+
+                const olaMaps = new OlaMaps({
+                    apiKey: 'DjCgVJ1QcKc7PHgjb1LGsVtke1ZfzA42IVHzg96e'
+                });
+
+                const myMap = await olaMaps.init({
+                    style: mapstyle,
+                    container: 'map',
+                    // center:[77.61261, 12.994826],
+                    // zoom: 15,
+                })
+
+                const bounds = new OlaMaps.LngLatBounds();
+
+                pointer.forEach((pinmark,index) => {
+
+                    bounds.extend(pinmark.pointer);
+
+                    // let cmark = document.createElement('div');
+                    // cmark.classList.add('customMarkerClass')
+
+                    // custom marker 
+                    const popup = new OlaMaps.Popup({offset: [0, -30], anchor: 'bottom' })
+                        .setHTML(`<h4>${pinmark.name}</h4>`)
+
+                    const marker = new OlaMaps.Marker({offset: [0, 10], anchor: 'bottom' })
+                        .setLngLat(pinmark.pointer).setPopup(popup)
+                        .addTo(myMap)
+                        
+                          if(pointer.length === 1){
+                            marker.togglePopup();
+                          }
+                          marker.getElement()
+                        .addEventListener('click', () => {
+                            myMap.flyTo({
+                                center: pinmark.pointer,
+                                zoom: 16,
+                                speed: 1.2,
+                                curve: 1,
+                                essential: true
+                            });
+                        });
+                });
+
+
+                // ✅ Auto center & zoom
+                if (pointer.length === 1) {
+                    myMap.setCenter(pointer[0].pointer);
+                    myMap.setZoom(15);
+
+                } else {
+                    myMap.fitBounds(bounds, {
+                        padding: 80,
+                        maxZoom: 16,
+                        duration: 1000
+                    });
+                }
+
+            })();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            fetch('sample.json').then(res => res.json()).then(data => finalLoad(data))
+
+        });
+
+        function finalLoad(data) {
+            data.forEach(val => document.querySelector('.place-item').innerHTML += `<label><input class="input" type="radio" name="pin">${val.name}</label>`);
+            mydata = data;
+            mapload(defaultMap, mydata);
+
+
+
+            let select = document.querySelector('#mapstyle');
+            select.addEventListener('change', () => {
+                mapload(select.value, mydata);
+            });
+
+            let labels = document.querySelectorAll('label');
+
+            labels.forEach(label => {
+                label.addEventListener('click', () => {
+                    let onepin = mydata.filter(item => item.name === label.textContent.replace(/\s*\n\s*/g, ", "));
+                    mapload(defaultMap, onepin)
+                });
+            })
+
+        }
+    </script>
+
+
+</body>
+
+</html>
